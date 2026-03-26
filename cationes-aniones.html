@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemistry Puzzle — Compuestos Iónicos</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --accent: #4f46e5; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #eef2ff;
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 12px 60px;
+    background-image:
+      radial-gradient(circle at 15% 15%, #c7d2fe55 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, #fbcfe855 0%, transparent 45%);
+  }
+
+  h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.5rem, 4vw, 2.3rem);
+    color: #1e1b4b; text-align: center; margin-bottom: 2px;
+  }
+  .subtitle { color: #6b7280; font-size: 0.9rem; font-weight: 600; text-align: center; margin-bottom: 20px; }
+  .score-bar { display: flex; gap: 24px; margin-bottom: 18px; font-family: 'Fredoka One', cursive; font-size: 1.05rem; color: #374151; }
+  .score-bar span { color: var(--accent); }
+
+  .game-area { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1100px; }
+  .column { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .col-label { font-family: 'Fredoka One', cursive; font-size: 1rem; color: #374151; margin-bottom: 2px; align-self: center; }
+
+  .piece-wrap {
+    position: relative; cursor: grab; user-select: none;
+    filter: drop-shadow(2px 3px 5px rgba(0,0,0,0.18));
+    transition: transform 0.13s, filter 0.13s; touch-action: none;
+  }
+  .piece-wrap:hover  { transform: scale(1.06); filter: drop-shadow(3px 5px 10px rgba(0,0,0,0.28)); }
+  .piece-wrap.selected { filter: drop-shadow(0 0 10px #4f46e5cc); transform: scale(1.09); }
+  .piece-wrap svg { display: block; overflow: visible; }
+
+  .piece-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive; font-size: 1.05rem;
+    color: #fff; pointer-events: none;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  .drop-area { display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: 300px; }
+  .slots-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+
+  .slot-wrap {
+    position: relative;
+    filter: drop-shadow(1px 2px 4px rgba(0,0,0,0.12));
+    transition: filter 0.15s; cursor: pointer;
+  }
+  .slot-wrap.drag-over { filter: drop-shadow(0 0 14px #4f46e5cc); }
+  .slot-wrap svg { display: block; overflow: visible; }
+
+  .slot-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive; font-size: 0.78rem;
+    color: #9ca3af; pointer-events: none; text-align: center; line-height: 1.3;
+  }
+  .slot-wrap.has-piece .slot-label { display: none; }
+
+  .result-box {
+    background: white; border-radius: 16px; padding: 16px 24px;
+    min-width: 260px; text-align: center;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08); min-height: 76px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .result-box.success { background: linear-gradient(135deg,#d1fae5,#a7f3d0); box-shadow: 0 4px 20px rgba(34,197,94,0.25); }
+  .result-box .formula { font-family: 'Fredoka One', cursive; font-size: 1.9rem; color: #1e1b4b; }
+  .result-box .chem-name { font-size: 0.88rem; color: #374151; font-weight: 700; }
+  .result-box .hint { font-size: 0.82rem; color: #9ca3af; font-style: italic; }
+
+  .btn-reset {
+    padding: 9px 26px; background: var(--accent); color: white;
+    border: none; border-radius: 50px; font-family: 'Fredoka One', cursive;
+    font-size: 0.95rem; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.35); transition: transform 0.13s;
+  }
+  .btn-reset:hover { transform: translateY(-2px); }
+  .instructions { font-size: 0.78rem; color: #9ca3af; text-align: center; max-width: 300px; line-height: 1.5; font-weight: 600; }
+
+  #drag-ghost {
+    position: fixed; pointer-events: none; z-index: 9999;
+    opacity: 0.88; transform: translate(-50%, -50%) scale(1.08);
+    display: none; filter: drop-shadow(4px 6px 14px rgba(0,0,0,0.35));
+  }
+  #drag-ghost .ghost-label {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive; font-size: 1.05rem; color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.45); pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>🧩 Chemistry Puzzle</h1>
+<p class="subtitle">Une catión + anión — el número de conectores indica la carga</p>
+<div class="score-bar">✅ Compuestos: <span id="correct">0</span> &nbsp; 🔁 Intentos: <span id="attempts">0</span></div>
+
+<div class="game-area">
+  <div class="column">
+    <div class="col-label">⊕ Cationes</div>
+    <div id="cations-col"></div>
+  </div>
+
+  <div class="drop-area">
+    <div class="slots-row" id="slots-row"></div>
+    <div class="result-box" id="result-box">
+      <div class="hint">Arrastra un catión y un anión hacia el centro</div>
+    </div>
+    <button class="btn-reset" onclick="resetSlots()">🔄 Limpiar piezas</button>
+    <p class="instructions">Arrastra las piezas hasta los slots. Los conectores (protuberancias/hendiduras) indican la carga del ion.</p>
+  </div>
+
+  <div class="column">
+    <div class="col-label">⊖ Aniones</div>
+    <div id="anions-col"></div>
+  </div>
+</div>
+
+<div id="drag-ghost"><div class="ghost-label" id="ghost-label"></div></div>
+
+<script>
+// ════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════
+const cations = [
+  { id:'NH4', label:'NH₄⁺', charge:1, color:'#3d8f3e', formula:'NH4' },
+  { id:'H',   label:'H⁺',   charge:1, color:'#b91c1c', formula:'H' },
+  { id:'Na',  label:'Na⁺',  charge:1, color:'#b45309', formula:'Na' },
+  { id:'K',   label:'K⁺',   charge:1, color:'#be185d', formula:'K' },
+  { id:'Ag',  label:'Ag⁺',  charge:1, color:'#6b7280', formula:'Ag' },
+  { id:'Pb',  label:'Pb²⁺', charge:2, color:'#374151', formula:'Pb' },
+  { id:'Ba',  label:'Ba²⁺', charge:2, color:'#92400e', formula:'Ba' },
+  { id:'Mg',  label:'Mg²⁺', charge:2, color:'#4b5563', formula:'Mg' },
+  { id:'Ca',  label:'Ca²⁺', charge:2, color:'#c2410c', formula:'Ca' },
+  { id:'Cu',  label:'Cu²⁺', charge:2, color:'#0369a1', formula:'Cu' },
+  { id:'Fe2', label:'Fe²⁺', charge:2, color:'#1e3a5f', formula:'Fe' },
+  { id:'Co2', label:'Co²⁺', charge:2, color:'#4d7c0f', formula:'Co' },
+  { id:'Al',  label:'Al³⁺', charge:3, color:'#4b5563', formula:'Al' },
+  { id:'Fe3', label:'Fe³⁺', charge:3, color:'#991b1b', formula:'Fe' },
+  { id:'Co3', label:'Co³⁺', charge:3, color:'#3f6212', formula:'Co' },
+];
+
+const anions = [
+  { id:'MnO4', label:'MnO₄⁻', charge:1, color:'#c026d3', formula:'MnO4' },
+  { id:'OH',   label:'OH⁻',   charge:1, color:'#0891b2', formula:'OH' },
+  { id:'NO3',  label:'NO₃⁻',  charge:1, color:'#7c2d12', formula:'NO3' },
+  { id:'Cl',   label:'Cl⁻',   charge:1, color:'#166534', formula:'Cl' },
+  { id:'I',    label:'I⁻',    charge:1, color:'#5b21b6', formula:'I' },
+  { id:'O',    label:'O²⁻',   charge:2, color:'#1d4ed8', formula:'O' },
+  { id:'SO4',  label:'SO₄²⁻', charge:2, color:'#a16207', formula:'SO4' },
+  { id:'CO3',  label:'CO₃²⁻', charge:2, color:'#0369a1', formula:'CO3' },
+  { id:'S',    label:'S²⁻',   charge:2, color:'#65a30d', formula:'S' },
+  { id:'PO4',  label:'PO₄³⁻', charge:3, color:'#15803d', formula:'PO4' },
+  { id:'N',    label:'N³⁻',   charge:3, color:'#5b7ea6', formula:'N' },
+];
+
+const compoundNames = {
+  'NaCl':'Cloruro de sodio','KCl':'Cloruro de potasio','HCl':'Ácido clorhídrico',
+  'NaOH':'Hidróxido de sodio','KOH':'Hidróxido de potasio','CaO':'Óxido de calcio',
+  'CaCO3':'Carbonato de calcio','CaSO4':'Sulfato de calcio','Ca3(PO4)2':'Fosfato de calcio',
+  'NH4Cl':'Cloruro de amonio','H2O':'Agua','H2SO4':'Ácido sulfúrico',
+  'H3PO4':'Ácido fosfórico','HNO3':'Ácido nítrico','AgCl':'Cloruro de plata',
+  'AgNO3':'Nitrato de plata','NaNO3':'Nitrato de sodio','KNO3':'Nitrato de potasio',
+  'MgO':'Óxido de magnesio','Al2O3':'Óxido de aluminio','FeCl2':'Cloruro de hierro II',
+  'FeCl3':'Cloruro de hierro III','Fe(OH)2':'Hidróxido de hierro II',
+  'Fe(OH)3':'Hidróxido de hierro III','CuSO4':'Sulfato de cobre II',
+  'BaSO4':'Sulfato de bario','Na2SO4':'Sulfato de sodio','Na2CO3':'Carbonato de sodio',
+  'K2CO3':'Carbonato de potasio','MgSO4':'Sulfato de magnesio','Na3PO4':'Fosfato de sodio',
+  'K3PO4':'Fosfato de potasio','AlPO4':'Fosfato de aluminio','PbS':'Sulfuro de plomo',
+  'CuS':'Sulfuro de cobre','FeS':'Sulfuro de hierro II','Na2S':'Sulfuro de sodio',
+  'K2S':'Sulfuro de potasio','MgCl2':'Cloruro de magnesio','CaCl2':'Cloruro de calcio',
+  'Al2(SO4)3':'Sulfato de aluminio','KMnO4':'Permanganato de potasio',
+  'NaMnO4':'Permanganato de sodio','MgCO3':'Carbonato de magnesio',
+  'CuCl2':'Cloruro de cobre II','Fe2(SO4)3':'Sulfato de hierro III',
+  'Al(OH)3':'Hidróxido de aluminio','Mg(OH)2':'Hidróxido de magnesio',
+  'Ca(OH)2':'Hidróxido de calcio','Ba(OH)2':'Hidróxido de bario',
+};
+
+// ════════════════════════════════════════════
+// SVG PIECE PATH BUILDER
+// W=150, H=58, bump radius=9, bump depth=11
+// ════════════════════════════════════════════
+const PW = 150, PH = 58, PR = 6, BR = 9, BD = 12;
+
+/**
+ * CATION piece: right side has NOTCHES (huecos que reciben)
+ * ANION  piece: left side has BUMPS  (protuberancias que encajan)
+ *
+ * buildPath(rightNotches, leftBumps, color)
+ *   rightNotches: hendiduras en el lado derecho  → cationes (charge)
+ *   leftBumps:    protuberancias en lado izquierdo → aniones (charge)
+ */
+function buildPath(rightNotches, leftBumps, color) {
+  const d = [];
+
+  // Top edge
+  d.push(`M${PR},0 L${PW-PR},0 Q${PW},0 ${PW},${PR}`);
+
+  // Right side — notches inward (path dips to PW-BD)
+  if (rightNotches === 0) {
+    d.push(`L${PW},${PH-PR}`);
+  } else {
+    const slot = PH / (rightNotches + 1);
+    d.push(`L${PW},${slot - BR}`);
+    for (let i = 0; i < rightNotches; i++) {
+      const my = slot * (i + 1);
+      // curve inward to (PW-BD) then back out
+      d.push(`C${PW-BD},${my-BR} ${PW-BD},${my+BR} ${PW},${my+BR}`);
+      if (i < rightNotches - 1) d.push(`L${PW},${slot*(i+2)-BR}`);
+    }
+    d.push(`L${PW},${PH-PR}`);
+  }
+
+  // Bottom edge
+  d.push(`Q${PW},${PH} ${PW-PR},${PH} L${PR},${PH} Q0,${PH} 0,${PH-PR}`);
+
+  // Left side — bumps outward (path protrudes to -BD)
+  if (leftBumps === 0) {
+    d.push(`L0,${PR}`);
+  } else {
+    const slot = PH / (leftBumps + 1);
+    d.push(`L0,${slot * leftBumps + BR}`);
+    for (let i = leftBumps - 1; i >= 0; i--) {
+      const my = slot * (i + 1);
+      // curve outward to (-BD) then back
+      d.push(`C${-BD},${my+BR} ${-BD},${my-BR} 0,${my-BR}`);
+      if (i > 0) d.push(`L0,${slot*i+BR}`);
+    }
+    d.push(`L0,${PR}`);
+  }
+
+  d.push(`Q0,0 ${PR},0 Z`);
+  return `<path d="${d.join(' ')}" fill="${color}" stroke="rgba(0,0,0,0.08)" stroke-width="1"/>`;
+}
+
+/**
+ * Slot placeholder shape:
+ * Cation slot: right side has NOTCHES IN  → hendiduras (recibirá las protuberancias del anión)
+ * Anion  slot: left  side has BUMPS OUT   → protuberancias (recibirá los huecos del catión)
+ *
+ * buildSlotPath(rightNotches, leftBumps)
+ */
+function buildSlotPath(rightNotches, leftBumps) {
+  const d = [];
+  d.push(`M${PR},0 L${PW-PR},0 Q${PW},0 ${PW},${PR}`);
+
+  // Right side — NOTCHES inward (slot catión muestra hendiduras)
+  if (rightNotches === 0) {
+    d.push(`L${PW},${PH-PR}`);
+  } else {
+    const slot = PH / (rightNotches + 1);
+    d.push(`L${PW},${slot - BR}`);
+    for (let i = 0; i < rightNotches; i++) {
+      const my = slot * (i + 1);
+      d.push(`C${PW-BD},${my-BR} ${PW-BD},${my+BR} ${PW},${my+BR}`);
+      if (i < rightNotches - 1) d.push(`L${PW},${slot*(i+2)-BR}`);
+    }
+    d.push(`L${PW},${PH-PR}`);
+  }
+
+  d.push(`Q${PW},${PH} ${PW-PR},${PH} L${PR},${PH} Q0,${PH} 0,${PH-PR}`);
+
+  // Left side — BUMPS outward (slot anión muestra protuberancias, salen a -BD)
+  if (leftBumps === 0) {
+    d.push(`L0,${PR}`);
+  } else {
+    const slot = PH / (leftBumps + 1);
+    d.push(`L0,${slot * leftBumps + BR}`);
+    for (let i = leftBumps - 1; i >= 0; i--) {
+      const my = slot * (i + 1);
+      d.push(`C${-BD},${my+BR} ${-BD},${my-BR} 0,${my-BR}`);
+      if (i > 0) d.push(`L0,${slot*i+BR}`);
+    }
+    d.push(`L0,${PR}`);
+  }
+  d.push(`Q0,0 ${PR},0 Z`);
+  return `<path d="${d.join(' ')}" fill="#dce3f5" stroke="#bcc5e0" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+}
+
+// viewBox: cation piece needs extra room on left (bumps go negative x on anions)
+// Anion piece: leftBumps protrude to -BD, so ox = BD+2
+// Cation piece: rightNotches indent inward — no extra width needed on right
+function svgViewBox(rightNotches, leftBumps) {
+  const ox = leftBumps > 0 ? BD + 2 : 2;
+  const oy = 2;
+  const vw = PW + ox + 2; // no rightNotch overflow
+  const vh = PH + 4;
+  return { ox, oy, vw, vh, w: vw, h: vh };
+}
+
+function makePieceSVGStr(rightNotches, leftBumps, color) {
+  const { ox, oy, vw, vh, w, h } = svgViewBox(rightNotches, leftBumps);
+  return `<svg width="${w}" height="${h}" viewBox="${-ox} ${-oy} ${vw} ${vh}" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+    ${buildPath(rightNotches, leftBumps, color)}
+  </svg>`;
+}
+
+// Slot SVG: buildSlotPath(rightNotches, leftBumps)
+// leftBumps protrude to -BD, need extra ox
+function makeSlotSVGStr(rightNotches, leftBumps) {
+  const ox = leftBumps > 0 ? BD + 2 : 2;
+  const oy = 2;
+  const vw = PW + ox + 2;
+  const vh = PH + 4;
+  return `<svg width="${vw}" height="${vh}" viewBox="${-ox} ${-oy} ${vw} ${vh}" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+    ${buildSlotPath(rightNotches, leftBumps)}
+  </svg>`;
+}
+
+// ════════════════════════════════════════════
+// CREATE PIECE ELEMENT
+// ════════════════════════════════════════════
+function createPieceEl(data, type) {
+  // Cation: huecos (notches) on the RIGHT side
+  // Anion:  bumps (protuberancias) on the LEFT side
+  const rightNotches = type === 'cation' ? data.charge : 0;
+  const leftBumps    = type === 'anion'  ? data.charge : 0;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'piece-wrap';
+  wrap.dataset.id   = data.id;
+  wrap.dataset.type = type;
+  wrap.innerHTML = makePieceSVGStr(rightNotches, leftBumps, data.color);
+
+  const lbl = document.createElement('div');
+  lbl.className = 'piece-label';
+  lbl.textContent = data.label;
+  if (type === 'cation') lbl.style.paddingRight = (BD + 8) + 'px';
+  else                   lbl.style.paddingLeft  = (BD + 8) + 'px';
+  wrap.appendChild(lbl);
+
+  wrap.addEventListener('pointerdown', onPointerDown);
+  return wrap;
+}
+
+// ════════════════════════════════════════════
+// CREATE SLOT ELEMENT
+// ════════════════════════════════════════════
+function createSlotEl(type, charge) {
+  // Cation slot → hendiduras (notches) a la DERECHA: makeSlotSVGStr(charge, 0)
+  // Anion  slot → protuberancias (bumps)  a la IZQUIERDA: makeSlotSVGStr(0, charge)
+  const rightNotches = type === 'cation' ? (charge || 1) : 0;
+  const leftBumps    = type === 'anion'  ? (charge || 1) : 0;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'slot-wrap';
+  wrap.id = 'slot-' + type;
+  wrap.dataset.slotType = type;
+  wrap.innerHTML = makeSlotSVGStr(rightNotches, leftBumps)
+    + `<div class="slot-label">${type==='cation' ? 'Catión<br>aquí' : 'Anión<br>aquí'}</div>`;
+
+  attachSlotHandlers(wrap, type);
+  return wrap;
+}
+
+function attachSlotHandlers(wrap, type) {
+  wrap.addEventListener('dragover',  e => { e.preventDefault(); wrap.classList.add('drag-over'); });
+  wrap.addEventListener('dragleave', () => wrap.classList.remove('drag-over'));
+  wrap.addEventListener('drop', e => { e.preventDefault(); wrap.classList.remove('drag-over'); handleDrop(e, type); });
+  wrap.addEventListener('click', () => {
+    if (selected && selected.type === type) { placePiece(selected.data, type); clearSel(); }
+  });
+}
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+function renderColumns() {
+  ['cations','anions'].forEach(id => { document.getElementById(id+'-col').innerHTML=''; });
+  cations.forEach(c => document.getElementById('cations-col').appendChild(createPieceEl(c,'cation')));
+  anions.forEach(a  => document.getElementById('anions-col').appendChild(createPieceEl(a,'anion')));
+  buildSlots();
+}
+
+function buildSlots(catCharge, aniCharge) {
+  const row = document.getElementById('slots-row');
+  row.innerHTML = '';
+  row.appendChild(createSlotEl('cation', catCharge));
+  row.appendChild(createSlotEl('anion',  aniCharge));
+}
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let slotCation=null, slotAnion=null, selected=null;
+let correct=0, attempts=0;
+
+function clearSel() {
+  document.querySelectorAll('.piece-wrap.selected').forEach(e=>e.classList.remove('selected'));
+  selected=null;
+}
+
+// ════════════════════════════════════════════
+// POINTER DRAG (works on mouse & touch)
+// ════════════════════════════════════════════
+let drag = null;
+const ghost = document.getElementById('drag-ghost');
+const ghostLbl = document.getElementById('ghost-label');
+
+function onPointerDown(e) {
+  const wrap = e.currentTarget;
+  const data = [...cations,...anions].find(x=>x.id===wrap.dataset.id);
+  const type = wrap.dataset.type;
+  drag = { data, type, el:wrap, sx:e.clientX, sy:e.clientY, moved:false };
+  document.addEventListener('pointermove', onMove, {passive:false});
+  document.addEventListener('pointerup',   onUp);
+  wrap.setPointerCapture(e.pointerId);
+}
+
+function onMove(e) {
+  if (!drag) return;
+  const dx = e.clientX-drag.sx, dy = e.clientY-drag.sy;
+  if (!drag.moved && Math.hypot(dx,dy)>5) {
+    drag.moved=true; clearSel();
+    // Build ghost SVG
+    const rb = drag.type==='cation'?0:drag.data.charge;   // anion bumps left
+    const ln = drag.type==='anion' ?0:drag.data.charge;   // unused — no right bumps for cation ghost
+    const rightNotches = drag.type==='cation'?drag.data.charge:0;
+    const leftBumps    = drag.type==='anion' ?drag.data.charge:0;
+    ghost.innerHTML = makePieceSVGStr(rightNotches, leftBumps, drag.data.color)
+      + `<div class="ghost-label" style="padding-${drag.type==='cation'?'right':'left'}:${BD+8}px">${drag.data.label}</div>`;
+    ghost.style.display='block';
+    drag.el.style.opacity='0.35';
+  }
+  if (drag.moved) {
+    ghost.style.left=e.clientX+'px';
+    ghost.style.top =e.clientY+'px';
+    e.preventDefault();
+    document.querySelectorAll('.slot-wrap').forEach(s=>{
+      const r=s.getBoundingClientRect();
+      s.classList.toggle('drag-over',
+        e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom);
+    });
+  }
+}
+
+function onUp(e) {
+  if (!drag) return;
+  document.removeEventListener('pointermove',onMove);
+  document.removeEventListener('pointerup',  onUp);
+  ghost.style.display='none';
+  document.querySelectorAll('.slot-wrap').forEach(s=>s.classList.remove('drag-over'));
+  drag.el.style.opacity='';
+
+  if (!drag.moved) {
+    // click logic
+    const {data,type,el}=drag; drag=null;
+    if(selected&&selected.data.id===data.id&&selected.type===type){clearSel();return;}
+    clearSel();
+    if(type==='cation'&&!slotCation){placePiece(data,'cation');return;}
+    if(type==='anion' &&!slotAnion) {placePiece(data,'anion'); return;}
+    selected={data,type}; el.classList.add('selected');
+    return;
+  }
+
+  // drop on slot?
+  document.querySelectorAll('.slot-wrap').forEach(s=>{
+    if(!drag) return;
+    const r=s.getBoundingClientRect();
+    if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){
+      const st=s.dataset.slotType;
+      if(st===drag.type) placePiece(drag.data,st);
+      drag=null;
+    }
+  });
+  drag=null;
+}
+
+function handleDrop(e,slotType) {
+  const raw=e.dataTransfer.getData('text/plain');
+  if(!raw) return;
+  try {
+    const {id,type}=JSON.parse(raw);
+    if(type!==slotType) return;
+    const data=[...cations,...anions].find(x=>x.id===id);
+    if(data) placePiece(data,slotType);
+  } catch(_){}
+}
+
+// ════════════════════════════════════════════
+// PLACE PIECE
+// ════════════════════════════════════════════
+function placePiece(data, slotType) {
+  if(slotType==='cation') slotCation=data;
+  else                    slotAnion=data;
+  renderSlotFilled(slotType, data);
+  if(slotCation&&slotAnion) evaluate();
+}
+
+function renderSlotFilled(slotType, data) {
+  const rightNotches = slotType==='cation'?data.charge:0;
+  const leftBumps    = slotType==='anion' ?data.charge:0;
+  const slotEl = document.getElementById('slot-'+slotType);
+  if(!slotEl) return;
+  slotEl.classList.add('has-piece');
+  slotEl.innerHTML = makePieceSVGStr(rightNotches, leftBumps, data.color);
+  const lbl=document.createElement('div');
+  lbl.className='slot-label';
+  lbl.style.cssText=`display:flex;color:#fff;font-family:'Fredoka One',cursive;font-size:1.05rem;
+    text-shadow:0 1px 4px rgba(0,0,0,0.4);
+    padding-${slotType==='cation'?'right':'left'}:${BD+8}px`;
+  lbl.textContent=data.label;
+  slotEl.appendChild(lbl);
+  attachSlotHandlers(slotEl, slotType);
+}
+
+// ════════════════════════════════════════════
+// FORMULA
+// ════════════════════════════════════════════
+function gcd(a,b){return b===0?a:gcd(b,a%b);}
+function buildFormula(cat,ani){
+  const c=cat.charge,a=ani.charge,lcm=(c*a)/gcd(c,a);
+  const nC=lcm/c,nA=lcm/a;
+  const pC=['NH4'].includes(cat.formula);
+  const pA=['MnO4','OH','NO3','CO3','SO4','PO4'].includes(ani.formula);
+  let f='';
+  f+=nC===1?cat.formula:(pC?`(${cat.formula})${nC}`:`${cat.formula}${nC}`);
+  f+=nA===1?ani.formula:(pA?`(${ani.formula})${nA}`:`${ani.formula}${nA}`);
+  return f;
+}
+function pretty(raw){
+  return raw
+    .replace(/NH4/g,'NH₄').replace(/MnO4/g,'MnO₄').replace(/NO3/g,'NO₃')
+    .replace(/CO3/g,'CO₃').replace(/SO4/g,'SO₄').replace(/PO4/g,'PO₄')
+    .replace(/(\d+)/g,'<sub>$1</sub>');
+}
+
+// ════════════════════════════════════════════
+// EVALUATE
+// ════════════════════════════════════════════
+function evaluate(){
+  attempts++;
+  document.getElementById('attempts').textContent=attempts;
+  const formula=buildFormula(slotCation,slotAnion);
+  const name=compoundNames[formula]||'';
+  const c=slotCation.charge,a=slotAnion.charge,lcm=(c*a)/gcd(c,a);
+  const ratio=lcm/c===1&&lcm/a===1?'1 : 1':`${lcm/c} : ${lcm/a}`;
+  const rb=document.getElementById('result-box');
+  rb.classList.remove('success'); void rb.offsetWidth; rb.classList.add('success');
+  correct++; document.getElementById('correct').textContent=correct;
+  rb.innerHTML=`
+    <div style="font-size:1rem;margin-bottom:2px">✅ ¡Compuesto formado!</div>
+    <div class="formula">${pretty(formula)}</div>
+    ${name?`<div class="chem-name">${name}</div>`:''}
+    <div style="font-size:0.75rem;color:#065f46;margin-top:4px">
+      ${slotCation.label} + ${slotAnion.label} → catión:anión = ${ratio}
+    </div>`;
+}
+
+function resetSlots(){
+  slotCation=slotAnion=null; clearSel();
+  buildSlots();
+  const rb=document.getElementById('result-box');
+  rb.className='result-box';
+  rb.innerHTML='<div class="hint">Arrastra un catión y un anión hacia el centro</div>';
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+renderColumns();
+</script>
+</body>
+</html>
