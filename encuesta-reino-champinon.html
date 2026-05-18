@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>&#127812; Encuesta de Energ&#237;a del Reino Champi&#241;&#243;n</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --red: #e8374b;
+    --yellow: #ffd700;
+    --blue: #3a86ff;
+    --green: #43c759;
+    --dark: #1a1025;
+    --darker: #110c1a;
+    --card: #231736;
+    --card2: #2d1f45;
+    --text: #f0e8ff;
+    --muted: #a090c0;
+    --border: #4a3370;
+    --pixel: 'Press Start 2P', monospace;
+    --body: 'Nunito', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--darker);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* &#9472;&#9472; PIXEL GRID BACKGROUND &#9472;&#9472; */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,215,0,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,215,0,.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* &#9472;&#9472; PAGES &#9472;&#9472; */
+  .page { display: none; position: relative; z-index: 1; }
+  .page.active { display: block; }
+
+  /* &#9472;&#9472; HEADER &#9472;&#9472; */
+  .header {
+    background: linear-gradient(135deg, #2d0a0a 0%, #1a1025 40%, #0a1a2d 100%);
+    border-bottom: 4px solid var(--yellow);
+    padding: 28px 20px 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header h1 {
+    font-family: var(--pixel);
+    font-size: clamp(10px, 2.5vw, 18px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 #8b5000, 0 0 20px rgba(255,215,0,.4);
+    line-height: 1.8;
+    letter-spacing: 1px;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 8px;
+  }
+
+  /* &#9472;&#9472; SURVEY CONTAINER &#9472;&#9472; */
+  .survey-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* &#9472;&#9472; LEVEL TITLE &#9472;&#9472; */
+  .level-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(90deg, var(--card2), transparent);
+    border-left: 4px solid var(--yellow);
+    padding: 10px 16px;
+    margin: 32px 0 16px;
+    border-radius: 0 8px 8px 0;
+  }
+  .level-title .icon { font-size: 24px; }
+  .level-title span {
+    font-family: var(--pixel);
+    font-size: 9px;
+    color: var(--yellow);
+    line-height: 1.6;
+  }
+
+  /* &#9472;&#9472; QUESTION CARD &#9472;&#9472; */
+  .q-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: border-color .2s;
+  }
+  .q-card:hover { border-color: #6a4a90; }
+  .q-label {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .q-num {
+    display: inline-block;
+    background: var(--yellow);
+    color: var(--darker);
+    font-family: var(--pixel);
+    font-size: 8px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  /* &#9472;&#9472; OPTIONS &#9472;&#9472; */
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--card2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    cursor: pointer;
+    transition: all .18s;
+    user-select: none;
+  }
+  .opt:hover { border-color: var(--blue); background: #35255a; }
+  .opt.selected {
+    border-color: var(--yellow);
+    background: #3d2d10;
+    box-shadow: 0 0 12px rgba(255,215,0,.2);
+  }
+  .opt input[type=radio] { display: none; }
+  .opt-dot {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: all .18s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .opt.selected .opt-dot {
+    border-color: var(--yellow);
+    background: var(--yellow);
+  }
+  .opt.selected .opt-dot::after {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--darker);
+    border-radius: 50%;
+  }
+  .opt-emoji { font-size: 20px; flex-shrink: 0; line-height: 1; margin-top: 1px; }
+  .opt-text { font-size: 14px; line-height: 1.5; }
+
+  /* &#9472;&#9472; NUMBER INPUT &#9472;&#9472; */
+  .num-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .num-btn {
+    width: 38px; height: 38px;
+    background: var(--card2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-size: 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .num-btn:hover { border-color: var(--yellow); background: #3d2d10; }
+  .num-display {
+    font-family: var(--pixel);
+    font-size: 20px;
+    color: var(--yellow);
+    min-width: 40px;
+    text-align: center;
+  }
+  .num-label { font-size: 13px; color: var(--muted); }
+
+  /* &#9472;&#9472; PROGRESS &#9472;&#9472; */
+  .progress-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--darker);
+    padding: 10px 16px;
+    border-bottom: 2px solid var(--border);
+  }
+  .progress-bar-bg {
+    background: var(--card);
+    border-radius: 99px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    background: linear-gradient(90deg, var(--yellow), var(--red));
+    height: 100%;
+    border-radius: 99px;
+    transition: width .4s ease;
+    width: 0%;
+  }
+  .progress-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+    font-family: var(--pixel);
+  }
+
+  /* &#9472;&#9472; SUBMIT BTN &#9472;&#9472; */
+  .btn-submit {
+    display: block;
+    margin: 36px auto 0;
+    background: linear-gradient(135deg, var(--yellow), #ff9900);
+    color: var(--darker);
+    font-family: var(--pixel);
+    font-size: 12px;
+    padding: 16px 40px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #8b5000, 0 0 30px rgba(255,215,0,.3);
+    transition: all .15s;
+    letter-spacing: 1px;
+  }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #8b5000, 0 0 40px rgba(255,215,0,.4); }
+  .btn-submit:active { transform: translateY(2px); box-shadow: 0 2px 0 #8b5000; }
+  .btn-submit:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+  .error-msg {
+    text-align: center;
+    color: var(--red);
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* &#9472;&#9472; RESULTS PAGE &#9472;&#9472; */
+  .results-wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 16px 60px;
+  }
+
+  /* &#9472;&#9472; AVATAR CARD &#9472;&#9472; */
+  .avatar-card {
+    background: linear-gradient(135deg, var(--card2), var(--card));
+    border: 3px solid var(--yellow);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 28px;
+    box-shadow: 0 0 40px rgba(255,215,0,.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,215,0,.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .avatar-emoji { font-size: 80px; display: block; margin-bottom: 8px; animation: bounce 1s ease infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+  .avatar-name {
+    font-family: var(--pixel);
+    font-size: clamp(12px, 3vw, 20px);
+    color: var(--yellow);
+    text-shadow: 2px 2px 0 #8b5000;
+    margin-bottom: 6px;
+  }
+  .avatar-tag {
+    display: inline-block;
+    background: var(--red);
+    color: #fff;
+    font-family: var(--pixel);
+    font-size: 9px;
+    padding: 4px 12px;
+    border-radius: 99px;
+    margin-bottom: 14px;
+  }
+  .avatar-desc { font-size: 15px; line-height: 1.6; color: var(--text); max-width: 480px; margin: 0 auto; }
+
+  /* &#9472;&#9472; SCORE BADGE &#9472;&#9472; */
+  .score-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 20px 0 0;
+  }
+  .score-badge {
+    background: var(--darker);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: center;
+  }
+  .score-badge .val {
+    font-family: var(--pixel);
+    font-size: 28px;
+    color: var(--yellow);
+    display: block;
+  }
+  .score-badge .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* &#9472;&#9472; STATS &#9472;&#9472; */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: transform .2s;
+  }
+  .stat-card:hover { transform: translateY(-3px); }
+  .stat-icon { font-size: 36px; margin-bottom: 10px; }
+  .stat-val {
+    font-family: var(--pixel);
+    font-size: clamp(13px, 2.5vw, 18px);
+    color: var(--yellow);
+    margin-bottom: 8px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .stat-msg { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* -- IMPACTO MULTIVERSO -- */
+  .impacto-header {
+    background: linear-gradient(135deg, var(--card2), var(--card));
+    border: 2px solid var(--yellow);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .impacto-title {
+    font-family: var(--pixel);
+    font-size: clamp(8px, 2vw, 12px);
+    color: var(--yellow);
+    margin-bottom: 14px;
+    line-height: 1.8;
+  }
+  .impacto-intro {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.7;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .impacto-intro strong { color: var(--yellow); }
+  .impacto-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: transform .2s;
+  }
+  .impacto-card:hover { transform: translateY(-2px); }
+  .impacto-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+  .impacto-num {
+    font-family: var(--pixel);
+    font-size: 10px;
+    color: #fff;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .impacto-cat {
+    font-family: var(--pixel);
+    font-size: clamp(7px, 1.8vw, 10px);
+    color: var(--text);
+  }
+  .impacto-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .impacto-concepto {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    padding: 0 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .impacto-concepto strong { color: var(--text); }
+  .impacto-dato {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+  }
+  .impacto-icon { font-size: 36px; flex-shrink: 0; }
+  .impacto-val {
+    font-family: var(--pixel);
+    font-size: clamp(10px, 2.5vw, 14px);
+    color: var(--yellow);
+    margin-bottom: 6px;
+    line-height: 1.6;
+  }
+  .impacto-msg { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+  /* -- OLD STATS GRID (keep for compat) -- */
+  .answers-title {
+    font-family: var(--pixel);
+    font-size: 10px;
+    color: var(--yellow);
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+  .answer-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .answer-row:last-child { border-bottom: none; }
+  .ans-q { color: var(--muted); flex-shrink: 0; width: 20px; font-weight: 700; }
+  .ans-a { color: var(--text); }
+  .ans-pd { color: var(--yellow); font-weight: 700; flex-shrink: 0; margin-left: auto; font-family: var(--pixel); font-size: 9px; padding-top: 2px; }
+
+  /* &#9472;&#9472; ACTION BTNS &#9472;&#9472; */
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 32px;
+  }
+  .btn-action {
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-family: var(--pixel);
+    font-size: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: .5px;
+  }
+  .btn-pdf {
+    background: var(--red);
+    color: #fff;
+    box-shadow: 0 4px 0 #8b0000;
+  }
+  .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #8b0000; }
+  .btn-retry {
+    background: var(--card2);
+    color: var(--yellow);
+    border: 2px solid var(--yellow);
+  }
+  .btn-retry:hover { background: #3d2d10; }
+
+  /* &#9472;&#9472; KWH BAR &#9472;&#9472; */
+  .kwh-meter {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+  .kwh-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .kwh-title { font-size: 13px; font-weight: 700; }
+  .kwh-val { font-family: var(--pixel); font-size: 13px; color: var(--yellow); }
+  .kwh-bg {
+    background: var(--darker);
+    border-radius: 99px;
+    height: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+  .kwh-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s ease;
+  }
+  .kwh-markers {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  /* Stars decoration */
+  .stars {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: rgba(255,215,0,.5);
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+  @media (max-width: 480px) {
+    .header h1 { font-size: 9px; }
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- &#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;
+     PAGE 1: SURVEY
+&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552; -->
+<div class="page active" id="page-survey">
+
+  <div class="header">
+    <h1>&#127812; ENCUESTA DE ENERG&#205;A<br>DEL REINO CHAMPI&#209;&#211;N</h1>
+    <p>Descubre tu avatar y calcula tu impacto real en el planeta</p>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    <div class="progress-label" id="progress-label">0 / 14 respondidas</div>
+  </div>
+
+  <div class="survey-wrap">
+
+    <!-- NOMBRE -->
+    <div class="q-card" id="card-nombre" style="border-color:var(--yellow)">
+      <div class="q-label">&#127918; &#191;C&#243;mo te llamas, jugador?</div>
+      <input type="text" id="input-nombre" placeholder="Escribe tu nombre aqu&#237;..." style="
+        width:100%;
+        background:var(--card2);
+        border:2px solid var(--border);
+        border-radius:10px;
+        padding:12px 16px;
+        color:var(--text);
+        font-family:var(--body);
+        font-size:16px;
+        outline:none;
+        transition:border-color .2s;
+        margin-top:4px;
+      " oninput="updateNombre(this.value)" onfocus="this.style.borderColor='var(--yellow)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+
+    <!-- LEVEL 1 -->
+    <div class="level-title">
+      <span class="icon">&#127984;</span>
+      <span>NIVEL 1<br>EL CASTILLO &#183; TU HOGAR Y CLIMATIZACI&#211;N</span>
+    </div>
+
+    <!-- Q1: number of people -->
+    <div class="q-card" id="card-q1">
+      <div class="q-label"><span class="q-num">1</span>&#191;Cu&#225;ntos jugadores viven habitualmente en tu casa?</div>
+      <div class="num-wrap">
+        <button class="num-btn" onclick="changeNum(-1)">&#8722;</button>
+        <div class="num-display" id="num-display">1</div>
+        <div class="num-label">personas</div>
+        <button class="num-btn" onclick="changeNum(1)">+</button>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="q-card" data-q="2">
+      <div class="q-label"><span class="q-num">2</span>En invierno, &#191;c&#243;mo se suele estar en tu casa?</div>
+      <div class="options">
+        <label class="opt" data-q="2" data-pd="1"><input type="radio" name="q2" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#10052;&#65039;</span><span class="opt-text"><strong>Modo Ping&#252;ino:</strong> Hace fresquito, nos abrigamos con sudaderas o mantas.</span></label>
+        <label class="opt" data-q="2" data-pd="2"><input type="radio" name="q2" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#127812;</span><span class="opt-text"><strong>Modo Champi&#241;&#243;n:</strong> Se est&#225; bien, con una manga larga normal (unos 20&#176;C).</span></label>
+        <label class="opt" data-q="2" data-pd="4"><input type="radio" name="q2" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#128293;</span><span class="opt-text"><strong>Modo Castillo de Bowser:</strong> Hace tanto calor que podemos ir en manga corta en enero.</span></label>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="q-card" data-q="3">
+      <div class="q-label"><span class="q-num">3</span>En verano, si ten&#233;is aire acondicionado, &#191;c&#243;mo se usa?</div>
+      <div class="options">
+        <label class="opt" data-q="3" data-pd="0"><input type="radio" name="q3" value="0"><div class="opt-dot"></div><span class="opt-emoji">&#10060;</span><span class="opt-text">No tenemos o usamos ventilador de techo/pie.</span></label>
+        <label class="opt" data-q="3" data-pd="2"><input type="radio" name="q3" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#9201;&#65039;</span><span class="opt-text">Solo se enciende en las horas de calor insoportable.</span></label>
+        <label class="opt" data-q="3" data-pd="4"><input type="radio" name="q3" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#129482;</span><span class="opt-text">Est&#225; puesto casi todo el d&#237;a a temperaturas muy bajas (18&#176;&#8211;20&#176;C).</span></label>
+      </div>
+    </div>
+
+    <!-- LEVEL 2 -->
+    <div class="level-title">
+      <span class="icon">&#128167;</span>
+      <span>NIVEL 2<br>LAS TUBER&#205;AS &#183; AGUA CALIENTE</span>
+    </div>
+
+    <!-- Q4 -->
+    <div class="q-card" data-q="4">
+      <div class="q-label"><span class="q-num">4</span>Cuando te duchas, &#191;cu&#225;nto tiempo suele correr el agua?</div>
+      <div class="options">
+        <label class="opt" data-q="4" data-pd="1"><input type="radio" name="q4" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#9889;</span><span class="opt-text"><strong>Modo Speedrun:</strong> Menos de 5 minutos.</span></label>
+        <label class="opt" data-q="4" data-pd="2"><input type="radio" name="q4" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#128694;</span><span class="opt-text"><strong>Modo Exploraci&#243;n:</strong> Entre 5 y 10 minutos.</span></label>
+        <label class="opt" data-q="4" data-pd="4"><input type="radio" name="q4" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#128034;</span><span class="opt-text"><strong>Modo AFK:</strong> M&#225;s de 15 minutos (el ba&#241;o parece una sauna de vapor).</span></label>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="q-card" data-q="5">
+      <div class="q-label"><span class="q-num">5</span>&#191;A qu&#233; temperatura pones el agua?</div>
+      <div class="options">
+        <label class="opt" data-q="5" data-pd="1"><input type="radio" name="q5" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#128167;</span><span class="opt-text">Templada / tirando a fresca.</span></label>
+        <label class="opt" data-q="5" data-pd="2"><input type="radio" name="q5" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#9728;&#65039;</span><span class="opt-text">Caliente, pero sin quemar.</span></label>
+        <label class="opt" data-q="5" data-pd="4"><input type="radio" name="q5" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#128293;</span><span class="opt-text">Nivel Lava de Bowser (lo m&#225;s caliente posible).</span></label>
+      </div>
+    </div>
+
+    <!-- LEVEL 3 -->
+    <div class="level-title">
+      <span class="icon">&#127859;</span>
+      <span>NIVEL 3<br>LA COCINA DEL CHEF TOAD</span>
+    </div>
+
+    <!-- Q6 -->
+    <div class="q-card" data-q="6">
+      <div class="q-label"><span class="q-num">6</span>&#191;Qu&#233; sistema utiliz&#225;is para cocinar en los fogones?</div>
+      <div class="options">
+        <label class="opt" data-q="6" data-pd="1"><input type="radio" name="q6" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#128293;</span><span class="opt-text">Gas (butano o gas natural).</span></label>
+        <label class="opt" data-q="6" data-pd="2"><input type="radio" name="q6" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#129522;</span><span class="opt-text">Placa de Inducci&#243;n (calienta muy r&#225;pido).</span></label>
+        <label class="opt" data-q="6" data-pd="3"><input type="radio" name="q6" value="3"><div class="opt-dot"></div><span class="opt-emoji">&#128308;</span><span class="opt-text">Vitrocer&#225;mica tradicional (se enciende un foco rojo y tarda en calentar/enfriar).</span></label>
+      </div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="q-card" data-q="7">
+      <div class="q-label"><span class="q-num">7</span>Misi&#243;n de exploraci&#243;n: Revisa el frigor&#237;fico de tu casa. &#191;De qu&#233; a&#241;o crees que es?</div>
+      <div class="options">
+        <label class="opt" data-q="7" data-pd="1"><input type="radio" name="q7" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#127775;</span><span class="opt-text">Es s&#250;per moderno, lo compraron hace menos de 3 a&#241;os.</span></label>
+        <label class="opt" data-q="7" data-pd="2"><input type="radio" name="q7" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#127812;</span><span class="opt-text">Tiene ya unos a&#241;itos (entre 3 y 10 a&#241;os).</span></label>
+        <label class="opt" data-q="7" data-pd="4"><input type="radio" name="q7" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#129429;</span><span class="opt-text">Es una reliquia, lleva en casa desde antes de que yo tuviera uso de raz&#243;n (m&#225;s de 10 a&#241;os).</span></label>
+      </div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="q-card" data-q="8">
+      <div class="q-label"><span class="q-num">8</span>Busca la etiqueta energ&#233;tica en el marco de la puerta del frigor&#237;fico:</div>
+      <div class="options">
+        <label class="opt" data-q="8" data-pd="1"><input type="radio" name="q8" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#128994;</span><span class="opt-text">Letras A, B o C (o las antiguas A+++ / A++).</span></label>
+        <label class="opt" data-q="8" data-pd="2"><input type="radio" name="q8" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#128993;</span><span class="opt-text">Letras D o E (o la antigua A+).</span></label>
+        <label class="opt" data-q="8" data-pd="4"><input type="radio" name="q8" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#128308;</span><span class="opt-text">Letras F o G (o no tiene etiqueta porque es muy viejo).</span></label>
+      </div>
+    </div>
+
+    <!-- Q9 -->
+    <div class="q-card" data-q="9">
+      <div class="q-label"><span class="q-num">9</span>&#191;Ten&#233;is lavavajillas? Si es que s&#237;, &#191;c&#243;mo se suele poner?</div>
+      <div class="options">
+        <label class="opt" data-q="9" data-pd="1"><input type="radio" name="q9" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#10060;</span><span class="opt-text">No tenemos, fregamos a mano (con el grifo cerrado mientras enjabonamos).</span></label>
+        <label class="opt" data-q="9" data-pd="1"><input type="radio" name="q9" value="1b"><div class="opt-dot"></div><span class="opt-emoji">&#128230;</span><span class="opt-text">S&#237;, pero solo se enciende cuando est&#225; completamente lleno y en modo ECO o Normal.</span></label>
+        <label class="opt" data-q="9" data-pd="3"><input type="radio" name="q9" value="3"><div class="opt-dot"></div><span class="opt-emoji">&#127786;&#65039;</span><span class="opt-text">S&#237;, y a veces se pone medio vac&#237;o o siempre en programas intensivos muy calientes.</span></label>
+        <label class="opt" data-q="9" data-pd="4"><input type="radio" name="q9" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#128688;</span><span class="opt-text">Fregamos a mano, pero dejando el grifo de agua caliente abierto todo el rato.</span></label>
+      </div>
+    </div>
+
+    <!-- LEVEL 4 -->
+    <div class="level-title">
+      <span class="icon">&#129532;</span>
+      <span>NIVEL 4<br>LA ZONA DE LAVADO &#183; LAVADORA</span>
+    </div>
+
+    <!-- Q10 -->
+    <div class="q-card" data-q="10">
+      <div class="q-label"><span class="q-num">10</span>&#191;Cu&#225;ntas lavadoras se suelen poner a la semana en tu casa?</div>
+      <div class="options">
+        <label class="opt" data-q="10" data-pd="1"><input type="radio" name="q10" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#128230;</span><span class="opt-text">Pocas (1 a 3 lavadoras), se espera a que el cesto est&#233; lleno.</span></label>
+        <label class="opt" data-q="10" data-pd="2"><input type="radio" name="q10" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#129530;</span><span class="opt-text">Lo normal (4 a 6 lavadoras).</span></label>
+        <label class="opt" data-q="10" data-pd="4"><input type="radio" name="q10" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#128260;</span><span class="opt-text">Much&#237;simas (m&#225;s de 7 a la semana), a veces con dos prendas contadas.</span></label>
+      </div>
+    </div>
+
+    <!-- Q11 -->
+    <div class="q-card" data-q="11">
+      <div class="q-label"><span class="q-num">11</span>&#191;A qu&#233; temperatura se suele lavar la ropa?</div>
+      <div class="options">
+        <label class="opt" data-q="11" data-pd="1"><input type="radio" name="q11" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#10052;&#65039;</span><span class="opt-text">Casi siempre en fr&#237;o o a 30&#176;C.</span></label>
+        <label class="opt" data-q="11" data-pd="2"><input type="radio" name="q11" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#127777;&#65039;</span><span class="opt-text">A temperatura media (40&#176;C).</span></label>
+        <label class="opt" data-q="11" data-pd="4"><input type="radio" name="q11" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#128293;</span><span class="opt-text">Muy caliente (60&#176;C o m&#225;s) de forma habitual.</span></label>
+      </div>
+    </div>
+
+    <!-- LEVEL 5 -->
+    <div class="level-title">
+      <span class="icon">&#127918;</span>
+      <span>NIVEL 5<br>LA SALA DE RECREATIVAS &#183; PANTALLAS Y GADGETS</span>
+    </div>
+
+    <!-- Q12 -->
+    <div class="q-card" data-q="12">
+      <div class="q-label"><span class="q-num">12</span>&#191;Cu&#225;ntas horas al d&#237;a pasas frente a una pantalla grande (TV, Consola, PC) fuera del instituto?</div>
+      <div class="options">
+        <label class="opt" data-q="12" data-pd="1"><input type="radio" name="q12" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#9201;&#65039;</span><span class="opt-text">Menos de 2 horas.</span></label>
+        <label class="opt" data-q="12" data-pd="2"><input type="radio" name="q12" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#9203;</span><span class="opt-text">Entre 2 y 5 horas.</span></label>
+        <label class="opt" data-q="12" data-pd="4"><input type="radio" name="q12" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#128421;&#65039;</span><span class="opt-text">M&#225;s de 5 horas diarias.</span></label>
+      </div>
+    </div>
+
+    <!-- Q13 -->
+    <div class="q-card" data-q="13">
+      <div class="q-label"><span class="q-num">13</span>El piloto rojo del mal (Standby): Cuando apagas la tele, el PC o la consola...</div>
+      <div class="options">
+        <label class="opt" data-q="13" data-pd="1"><input type="radio" name="q13" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#128268;</span><span class="opt-text">Apago la regleta del todo para que no quede ninguna lucecita encendida.</span></label>
+        <label class="opt" data-q="13" data-pd="2"><input type="radio" name="q13" value="2"><div class="opt-dot"></div><span class="opt-emoji">&#128308;</span><span class="opt-text">Se queda con el piloto rojo encendido esperando con el mando.</span></label>
+        <label class="opt" data-q="13" data-pd="4"><input type="radio" name="q13" value="4"><div class="opt-dot"></div><span class="opt-emoji">&#9208;&#65039;</span><span class="opt-text">Muchas veces se queda encendido con el juego en pausa o v&#237;deos de fondo mientras no estoy.</span></label>
+      </div>
+    </div>
+
+    <!-- Q14 -->
+    <div class="q-card" data-q="14">
+      <div class="q-label"><span class="q-num">14</span>Iluminaci&#243;n: Cuando vas de tu habitaci&#243;n al sal&#243;n...</div>
+      <div class="options">
+        <label class="opt" data-q="14" data-pd="1"><input type="radio" name="q14" value="1"><div class="opt-dot"></div><span class="opt-emoji">&#127775;</span><span class="opt-text">Apagas religiosamente la luz de la habitaci&#243;n de la que sales.</span></label>
+        <label class="opt" data-q="14" data-pd="3"><input type="radio" name="q14" value="3"><div class="opt-dot"></div><span class="opt-emoji">&#128123;</span><span class="opt-text">Dejas las luces encendidas por toda la casa por si acaso.</span></label>
+      </div>
+    </div>
+
+    <button class="btn-submit" id="btn-submit" onclick="submitSurvey()">&#127812; VER MIS RESULTADOS</button>
+    <div class="error-msg" id="error-msg">&#9888;&#65039; &#161;Responde todas las preguntas para continuar!</div>
+
+  </div>
+</div>
+
+<!-- &#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;
+     PAGE 2: RESULTS
+&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552; -->
+<div class="page" id="page-results">
+
+  <div class="header">
+    <h1>&#127775; RESULTADOS DEL<br>REINO CHAMPI&#209;&#211;N</h1>
+    <p>Tu impacto energ&#233;tico revelado</p>
+  </div>
+
+  <div class="results-wrap">
+
+    <!-- Avatar -->
+    <div class="avatar-card" id="avatar-card">
+      <div id="res-player" style="font-size:13px;color:var(--muted);margin-bottom:6px;letter-spacing:1px;font-weight:700;text-transform:uppercase"></div>
+      <span class="avatar-emoji" id="res-emoji">&#127812;</span>
+      <div class="avatar-name" id="res-name">&#8212;</div>
+      <div class="avatar-tag" id="res-tag">&#8212;</div>
+      <div class="avatar-desc" id="res-desc">&#8212;</div>
+      <div class="score-row">
+        <div class="score-badge">
+          <span class="val" id="res-pd">&#8212;</span>
+          <div class="lbl">Puntos de Derroche</div>
+        </div>
+        <div class="score-badge">
+          <span class="val" id="res-kwh">&#8212;</span>
+          <div class="lbl">kWh / a&#241;o estimados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- kWh meter -->
+    <div class="kwh-meter">
+      <div class="kwh-label">
+        <span class="kwh-title">&#9889; Medidor de Derroche</span>
+        <span class="kwh-val" id="kwh-meter-val">0 PD</span>
+      </div>
+      <div class="kwh-bg">
+        <div class="kwh-fill" id="kwh-fill" style="width:0%"></div>
+      </div>
+      <div class="kwh-markers">
+        <span>12 PD</span><span>Peach / Toad</span><span>Mario / Luigi</span><span>Wario</span><span>Bowser 52 PD</span>
+      </div>
+    </div>
+
+    <!-- MULTIVERSO IMPACTO -->
+    <div class="impacto-header">
+      <div class="impacto-title">&#128202; Tu Impacto Real en el Multiverso de la Energ&#237;a</div>
+      <div class="impacto-intro" id="impacto-intro">Cargando...</div>
+    </div>
+
+    <!-- 1. Electrica -->
+    <div class="impacto-card" style="border-color:#3a86ff">
+      <div class="impacto-card-header" style="background:linear-gradient(90deg,#0a1a3a,transparent);border-left:4px solid #3a86ff">
+        <span class="impacto-num" style="background:#3a86ff">1</span>
+        <span class="impacto-cat">&#9889; Energ&#237;a El&#233;ctrica</span>
+        <span class="impacto-sub">El poder de la tecnolog&#237;a</span>
+      </div>
+      <div class="impacto-concepto"><strong>Concepto:</strong> La energ&#237;a que alimenta nuestros dispositivos cotidianos.</div>
+      <div class="impacto-dato">
+        <span class="impacto-icon">&#128241;</span>
+        <div>
+          <div class="impacto-val" id="stat-movil">&#8212;</div>
+          <div class="impacto-msg" id="stat-movil-msg">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Quimica -->
+    <div class="impacto-card" style="border-color:#43c759">
+      <div class="impacto-card-header" style="background:linear-gradient(90deg,#0a2a0a,transparent);border-left:4px solid #43c759">
+        <span class="impacto-num" style="background:#43c759;color:#111">2</span>
+        <span class="impacto-cat">&#129514; Energ&#237;a Qu&#237;mica</span>
+        <span class="impacto-sub">La deuda ecol&#243;gica</span>
+      </div>
+      <div class="impacto-concepto"><strong>Concepto:</strong> Energ&#237;a en los enlaces qu&#237;micos de los combustibles. Al quemarse liberan CO&#8322;, y las plantas necesitan energ&#237;a de la fotos&#237;ntesis para volver a fijarlo.</div>
+      <div class="impacto-dato">
+        <span class="impacto-icon">&#127795;</span>
+        <div>
+          <div class="impacto-val" id="stat-arboles">&#8212;</div>
+          <div class="impacto-msg" id="stat-arboles-msg">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Cinetica -->
+    <div class="impacto-card" style="border-color:#ffd700">
+      <div class="impacto-card-header" style="background:linear-gradient(90deg,#2a1a00,transparent);border-left:4px solid #ffd700">
+        <span class="impacto-num" style="background:#ffd700;color:#111">3</span>
+        <span class="impacto-cat">&#127914; Energ&#237;a Cin&#233;tica</span>
+        <span class="impacto-sub">La energ&#237;a del movimiento &#8212; E&#8336; = &#189;mv&#178;</span>
+      </div>
+      <div class="impacto-concepto"><strong>Concepto:</strong> Cu&#225;nta masa en movimiento a gran velocidad podr&#237;as impulsar con tu energ&#237;a. F&#243;rmula: E&#8336; = &#189; &#215; m &#215; v&#178;</div>
+      <div class="impacto-dato">
+        <span class="impacto-icon">&#127950;</span>
+        <div>
+          <div class="impacto-val" id="stat-cinetica">&#8212;</div>
+          <div class="impacto-msg" id="stat-cinetica-msg">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Potencial -->
+    <div class="impacto-card" style="border-color:#e8374b">
+      <div class="impacto-card-header" style="background:linear-gradient(90deg,#2a0a0a,transparent);border-left:4px solid #e8374b">
+        <span class="impacto-num" style="background:#e8374b">4</span>
+        <span class="impacto-cat">&#127984; Energ&#237;a Potencial Gravitatoria</span>
+        <span class="impacto-sub">La energ&#237;a de la altura &#8212; E&#8346; = mgh</span>
+      </div>
+      <div class="impacto-concepto"><strong>Concepto:</strong> El enorme trabajo necesario para vencer la gravedad. F&#243;rmula: E&#8346; = m &#215; g &#215; h</div>
+      <div class="impacto-dato">
+        <span class="impacto-icon">&#128123;</span>
+        <div>
+          <div class="impacto-val" id="stat-potencial">&#8212;</div>
+          <div class="impacto-msg" id="stat-potencial-msg">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Answers summary -->
+    <div class="q-card">
+      <div class="answers-title">&#128203; RESUMEN DE TUS RESPUESTAS</div>
+      <div id="answers-list"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-row">
+      <button class="btn-action btn-pdf" onclick="downloadTXT()">&#128196; DESCARGAR TXT</button>
+      <button class="btn-action btn-retry" onclick="resetSurvey()">&#128260; REPETIR ENCUESTA</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Stars ──
+(function(){
+  const c = document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*100+'%';
+    s.style.setProperty('--dur', (2+Math.random()*4)+'s');
+    s.style.animationDelay = (Math.random()*4)+'s';
+    c.appendChild(s);
+  }
+})();
+
+// ── State ──
+let numPeople = 1;
+let playerName = '';
+const answers = {}; // q-num -> {pd, text}
+
+function updateNombre(val){
+  playerName = val.trim();
+  updateProgress();
+}
+
+// ── Question texts for PDF/summary ──
+const qTexts = {
+  1: 'Nº de personas en casa',
+  2: 'Temperatura en invierno',
+  3: 'Uso del aire acondicionado',
+  4: 'Duración de la ducha',
+  5: 'Temperatura del agua',
+  6: 'Sistema de cocina',
+  7: 'Antigüedad del frigorífico',
+  8: 'Etiqueta energética frigo',
+  9: 'Uso del lavavajillas',
+  10: 'Lavadoras por semana',
+  11: 'Temperatura de lavado',
+  12: 'Horas frente a pantalla',
+  13: 'Standby dispositivos',
+  14: 'Hábito de luces'
+};
+
+const optTexts = {
+  q2: {1:'Modo Pingüino (fresquito, con abrigo)', 2:'Modo Champiñón (~20°C)', 4:'Modo Castillo de Bowser (manga corta en enero)'},
+  q3: {0:'Sin AA / ventilador', 2:'Solo en horas de calor extremo', 4:'Todo el día a 18-20°C'},
+  q4: {1:'Speedrun: <5 min', 2:'Exploración: 5-10 min', 4:'AFK: >15 min'},
+  q5: {1:'Templada/fresca', 2:'Caliente sin quemar', 4:'Nivel Lava (lo más caliente)'},
+  q6: {1:'Gas', 2:'Inducción', 3:'Vitrocerámica'},
+  q7: {1:'Menos de 3 años', 2:'Entre 3 y 10 años', 4:'Más de 10 años (reliquia)'},
+  q8: {1:'A, B, C (o A+++ / A++)', 2:'D, E (o A+)', 4:'F, G (o sin etiqueta)'},
+  q9: {1:'Sin lavavajillas, grifo cerrado', '1b':'Lavavajillas lleno/ECO', 3:'Lavavajillas medio vacío/intensivo', 4:'Mano con grifo abierto'},
+  q10: {1:'1-3 lavadoras (llenas)', 2:'4-6 lavadoras', 4:'>7 lavadoras por semana'},
+  q11: {1:'Frío / 30°C', 2:'40°C', 4:'60°C o más'},
+  q12: {1:'Menos de 2 h', 2:'2-5 h', 4:'Más de 5 h'},
+  q13: {1:'Apago regleta del todo', 2:'Piloto rojo en standby', 4:'Encendido/pausa sin vigilar'},
+  q14: {1:'Apago la luz al salir', 3:'Dejo luces encendidas'}
+};
+
+// ── Number control ──
+function changeNum(delta){
+  numPeople = Math.max(1, Math.min(10, numPeople + delta));
+  document.getElementById('num-display').textContent = numPeople;
+  answers[1] = {pd: 0, text: numPeople + ' personas'};
+  updateProgress();
+}
+// Init Q1
+answers[1] = {pd: 0, text: '1 persona'};
+
+// ── Option click ──
+document.querySelectorAll('.opt').forEach(opt => {
+  opt.addEventListener('click', function(){
+    const q = parseInt(this.dataset.q);
+    const pd = parseFloat(this.dataset.pd);
+    const name = 'q' + q;
+    // Deselect siblings
+    document.querySelectorAll('.opt[data-q="'+q+'"]').forEach(o => o.classList.remove('selected'));
+    this.classList.add('selected');
+    this.querySelector('input').checked = true;
+    // Get text
+    const radio = this.querySelector('input');
+    const val = radio.value;
+    const txt = (optTexts[name] && optTexts[name][val]) ? optTexts[name][val] : this.querySelector('.opt-text').textContent.trim();
+    answers[q] = {pd, text: txt};
+    updateProgress();
+  });
+});
+
+// ── Progress ──
+function updateProgress(){
+  const answered = Object.keys(answers).length + (playerName ? 1 : 0);
+  const total = 15;
+  const pct = Math.round(answered / total * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = answered + ' / ' + total + ' respondidas';
+}
+updateProgress();
+
+// ── Submit ──
+function submitSurvey(){
+  // Check name
+  if(!playerName){
+    document.getElementById('error-msg').style.display = 'block';
+    document.getElementById('error-msg').textContent = '⚠️ ¡Escribe tu nombre para continuar!';
+    document.getElementById('input-nombre').focus();
+    document.getElementById('card-nombre').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  // Check all 14 questions answered
+  for(let i = 1; i <= 14; i++){
+    if(!answers[i]){
+      document.getElementById('error-msg').style.display = 'block';
+      document.getElementById('error-msg').textContent = '⚠️ ¡Responde todas las preguntas para continuar!';
+      const card = document.querySelector('[data-q="'+i+'"]');
+      if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+  }
+  document.getElementById('error-msg').style.display = 'none';
+  computeResults();
+  showPage('page-results');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── Compute ──
+function computeResults(){
+  let totalPD = 0;
+  for(let i = 2; i <= 14; i++){
+    if(answers[i]) totalPD += answers[i].pd;
+  }
+
+  // Avatar
+  let emoji, name, tag, desc, color;
+  if(totalPD <= 20){
+    emoji = '👑'; name = 'Princesa Peach / Toad'; tag = 'ECO-PLAYER';
+    desc = 'Sobresaliente. Tu consumo es supereficiente. Minimizas el gasto térmico y eléctrico, cuidas tus dispositivos y tus hábitos evitan toneladas de emisiones.';
+    color = '#43c759';
+  } else if(totalPD <= 32){
+    emoji = '🍄'; name = 'Mario / Luigi'; tag = 'FONTANERO EQUILIBRADO';
+    desc = 'Aprobado alto. Tienes un consumo medio razonable. Haces un uso normal de los electrodomésticos, aunque a veces caes en las trampas del standby o duchas un poco largas.';
+    color = '#3a86ff';
+  } else if(totalPD <= 42){
+    emoji = '💰'; name = 'Wario'; tag = 'DERROCHADOR DESPISTADO';
+    desc = 'Necesita mejorar. Consumes mucha energía invisible. Lavadoras medio vacías, frigos antiguos gastando el doble, luces olvidadas y cacharros en reposo engordando la factura.';
+    color = '#ffd700';
+  } else {
+    emoji = '🔥'; name = 'Bowser'; tag = 'DEVORADOR DE RECURSOS';
+    desc = 'Peligro Crítico. Tu huella ecológica está en números rojos. El uso ineficiente del agua hirviendo, la climatización extrema y las pantallas continuas exigen demasiados recursos al planeta.';
+    color = '#e8374b';
+  }
+
+  const kwh = totalPD * 55;
+  const julios = kwh * 3600000; // 1 kWh = 3,600,000 J
+  const movil = Math.round(kwh / 0.015).toLocaleString('es-ES');
+  const aniosBateria = Math.round(kwh / 0.015 * 3 / (365 * 24)).toLocaleString('es-ES');
+  const arboles = Math.round(kwh / 133);
+  const vagonetas = Math.round(julios / 760000).toLocaleString('es-ES');
+  const ascensores = Math.round(julios / 490000).toLocaleString('es-ES');
+
+  // Fill results header
+  document.getElementById('res-player').innerHTML = '🎮 Jugador: ' + playerName;
+  document.getElementById('res-emoji').innerHTML = emoji;
+  document.getElementById('res-name').innerHTML = name;
+  document.getElementById('res-tag').innerHTML = tag;
+  document.getElementById('res-desc').innerHTML = desc;
+  document.getElementById('res-pd').textContent = totalPD + ' PD';
+  document.getElementById('res-kwh').textContent = kwh.toLocaleString('es-ES');
+
+  // Meter
+  const pct = Math.round((totalPD - 12) / (52 - 12) * 100);
+  setTimeout(() => {
+    document.getElementById('kwh-fill').style.width = Math.min(100, Math.max(0, pct)) + '%';
+    document.getElementById('kwh-fill').style.background = 'linear-gradient(90deg, #43c759, ' + color + ')';
+    document.getElementById('kwh-meter-val').textContent = totalPD + ' PD';
+  }, 200);
+  // Intro message
+  const juliosFmt = (julios / 1e9).toFixed(2);
+  document.getElementById('impacto-intro').innerHTML =
+    'La energía ni se crea ni se destruye, pero la forma en que la consumes tiene consecuencias en diferentes dimensiones de la física. Tu consumo anual estimado es de <strong>' + kwh.toLocaleString('es-ES') + ' kWh</strong> (lo que equivale a unos <strong>' + juliosFmt + ' × 10⁹ Julios</strong>). Mira en qué se traduce esto:';
+
+  // 1. Electrica - movil
+  document.getElementById('stat-movil').textContent = movil + ' cargas';
+  document.getElementById('stat-movil-msg').innerHTML =
+    '🔌 <strong>Cargas de Smartphone:</strong> Con tu gasto energético, podrías cargar la batería de tu móvil ' + movil + ' veces. Eso significa que tendrías batería ininterrumpida durante más de <strong>' + aniosBateria + ' años</strong> sin parar.';
+
+  // 2. Quimica - arboles
+  document.getElementById('stat-arboles').innerHTML = arboles + ' árboles';
+  document.getElementById('stat-arboles-msg').innerHTML =
+    '🌳 <strong>Rescate Botánico:</strong> Al generar esa energía en el mundo real, se han quemado combustibles que liberan gases. Para que los bosques del Reino Champíñón puedan hacer la fotosíntesis y reabsorber todo tu CO₂, necesitarías plantar <strong>' + arboles + ' árboles maduros</strong>.';
+
+  // 3. Cinetica - vagonetas
+  document.getElementById('stat-cinetica').textContent = vagonetas + ' lanzamientos';
+  document.getElementById('stat-cinetica-msg').innerHTML =
+    '🏎 <strong>Lanzamiento de Montaña Rusa:</strong> Imagina una vagoneta estilo Donkey Kong Country de <strong>2.000 kg</strong> a toda velocidad (<strong>100 km/h</strong>). Con la energía que gastas en un año — usando Eₐ = ½mv² — podrías disparar esa vagoneta <strong>' + vagonetas + ' veces</strong> a velocidad máxima.';
+
+  // 4. Potencial - ascensores
+  document.getElementById('stat-potencial').textContent = ascensores + ' subidas';
+  document.getElementById('stat-potencial-msg').innerHTML =
+    '👻 <strong>El Ascensor de la Mansión Boo:</strong> Piensa en un gran ascensor de hierro de <strong>1.000 kg</strong>. Tu energía anual — usando Eₚ = mgh — sería suficiente para elevar ese ascensor hasta lo alto de una torre de <strong>50 metros</strong>... ¡<strong>' + ascensores + ' veces</strong>!</p>';
+
+  // Answers list
+  const list = document.getElementById('answers-list');
+  list.innerHTML = '';
+  for(let i = 1; i <= 14; i++){
+    if(!answers[i]) continue;
+    const row = document.createElement('div');
+    row.className = 'answer-row';
+    const pdBadge = i === 1 ? '' : `<div class="ans-pd">${answers[i].pd} PD</div>`;
+    row.innerHTML = `<div class="ans-q">${i}</div><div class="ans-a"><strong>${qTexts[i]}:</strong> ${answers[i].text}</div>${pdBadge}`;
+    list.appendChild(row);
+  }
+
+  // Store for download
+  window._results = { totalPD, kwh, julios, movil, aniosBateria, arboles, vagonetas, ascensores, emoji, name, tag, desc, color };
+}
+
+// ── Page switch ──
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function resetSurvey(){
+  // Reset state
+  for(let k in answers) delete answers[k];
+  answers[1] = {pd: 0, text: '1 persona'};
+  numPeople = 1;
+  playerName = '';
+  document.getElementById('num-display').textContent = '1';
+  document.getElementById('input-nombre').value = '';
+  document.querySelectorAll('.opt').forEach(o => {
+    o.classList.remove('selected');
+    o.querySelector('input').checked = false;
+  });
+  updateProgress();
+  showPage('page-survey');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function downloadTXT(){
+  const r = window._results;
+  const fecha = new Date().toLocaleDateString('es-ES', {day:'2-digit', month:'long', year:'numeric'});
+  const sep = '='.repeat(52);
+  const sep2 = '-'.repeat(52);
+
+  let lines = [];
+  lines.push(sep);
+  lines.push('  ENCUESTA DE ENERGIA DEL REINO CHAMPINON');
+  lines.push('  Informe de Impacto Energetico Personal');
+  lines.push('  Jugador: ' + playerName);
+  lines.push('  Fecha: ' + fecha);
+  lines.push(sep);
+  lines.push('');
+  lines.push('AVATAR: ' + r.name + ' (' + r.tag + ')');
+  lines.push('');
+  lines.push(r.desc);
+  lines.push('');
+  lines.push(sep2);
+  lines.push('PUNTUACION');
+  lines.push(sep2);
+  lines.push('Puntos de Derroche (PD): ' + r.totalPD + ' / 52');
+  lines.push('Consumo anual estimado:  ' + r.kwh.toLocaleString('es-ES') + ' kWh/anio');
+  lines.push('');
+  lines.push(sep2);
+  lines.push('IMPACTO REAL EN EL MULTIVERSO DE LA ENERGIA');
+  lines.push(sep2);
+  lines.push('[1] ENERGIA ELECTRICA - Cargas de Smartphone');
+  lines.push('    ' + r.movil + ' cargas completas de movil');
+  lines.push('    Bateria ininterrumpida durante mas de ' + r.aniosBateria + ' anos');
+  lines.push('');
+  lines.push('[2] ENERGIA QUIMICA - Rescate Botanico');
+  lines.push('    ' + r.arboles + ' arboles maduros para absorber tu CO2 anual');
+  lines.push('');
+  lines.push('[3] ENERGIA CINETICA (Ek = 1/2 mv^2) - Montana Rusa');
+  lines.push('    ' + r.vagonetas + ' lanzamientos de vagoneta de 2.000 kg a 100 km/h');
+  lines.push('');
+  lines.push('[4] ENERGIA POTENCIAL (Ep = mgh) - Ascensor Mansion Boo');
+  lines.push('    ' + r.ascensores + ' subidas de ascensor de 1.000 kg a 50 metros de altura');
+  lines.push('');
+  lines.push(sep2);
+  lines.push('RESUMEN DE RESPUESTAS');
+  lines.push(sep2);
+  for(let i = 1; i <= 14; i++){
+    if(!answers[i]) continue;
+    const pd = i > 1 ? '  [' + answers[i].pd + ' PD]' : '';
+    lines.push(i + '. ' + qTexts[i] + ': ' + answers[i].text + pd);
+  }
+  lines.push('');
+  lines.push(sep);
+  lines.push('  Reino Champinon - Encuesta de Eficiencia Energetica');
+  lines.push(sep);
+
+  const txt = lines.join('\n');
+
+  // Safe base64 encode using TextEncoder (handles all unicode correctly)
+  const bytes = new TextEncoder().encode(txt);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  const b64 = btoa(binary);
+
+  const a = document.createElement('a');
+  a.href = 'data:text/plain;charset=utf-8;base64,' + b64;
+  a.download = 'informe-' + playerName.replace(/\s+/g,'-').toLowerCase() + '.txt';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
